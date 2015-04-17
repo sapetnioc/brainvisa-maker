@@ -2,7 +2,7 @@ global information:
   content_version: 1.0
   name: catidb
   version: 2.0
-  default modules: [catidb, soma-workflow]
+  default modules: [catidb, soma-workflow, capsul]
 
 base:
     requires:
@@ -60,7 +60,8 @@ capsul:
         type: git
         url: https://github.com/neurospin/capsul.git
     build:
-        type: pure_python
+        type: brainvisa_cmake
+        model: pure_python
 
 cubicweb:
     requires:

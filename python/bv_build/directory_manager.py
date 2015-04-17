@@ -247,13 +247,14 @@ class DirectoryManager(object):
         for module in self.repository.modules_dependencies(self.modules):
             build = self.repository.module_build(module)
             if build:
-                build_type = build['type']
+                build = build.copy()
+                build_type = build.pop('type')
                 worker = workers.get(build_type)
                 if worker is None:
                     worker = get_worker(build_type, 'build')
                     worker.start_configure(self, verbose, release=release, debug=debug)
                     workers[build_type] = worker
-                worker.configure_module(self, verbose, module)
+                worker.configure_module(self, verbose, module,**build)
         for worker in workers.itervalues():
             worker.terminate_configure(self, verbose)
 
