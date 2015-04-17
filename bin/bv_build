@@ -1,0 +1,104 @@
+#!/usr/bin/env python
+import sys
+import os.path as osp
+import argparse
+
+dir = osp.join(osp.dirname(osp.dirname(__file__)), 'python')
+if osp.exists(dir):
+    sys.path.append(dir)
+
+from bv_build.yaml_utils import yaml_load, yaml_dump
+from bv_build.repository import Repository
+from bv_build.directory_manager import DirectoryManager
+
+
+def create_command(args):
+    DirectoryManager.create(args.build_directory, args.repository, args.modules)
+
+def status_command(args):
+    db = DirectoryManager(args.build_directory)
+    db.status()
+
+def status_command(args):
+    db = DirectoryManager(args.build_directory)
+    db.status()
+
+def check_command(args):
+    db = DirectoryManager(args.build_directory)
+    if args.force:
+        db.clear_cache()
+    db.check_requirements(verbose=args.verbose)
+    errors = db.resolve_requirements(verbose=args.verbose)
+    for error in errors:
+        print '\nERROR:', error
+    if errors:
+        sys.exit(1)
+
+def update_command(args):
+    check_command(args)
+    db = DirectoryManager(args.build_directory)
+    db.sources_update(verbose=args.verbose)
+
+def status_command(args):
+    db = DirectoryManager(args.build_directory)
+    if args.status_file:
+        output = open(args.status_file, 'w')
+    else:
+        output = sys.stdout
+    db.status(out=output)
+
+def configure_command(args):
+    check_command(args)
+    db = DirectoryManager(args.build_directory)
+    db.configure(verbose=args.verbose)
+
+def build_command(args):
+    check_command(args)
+    db = DirectoryManager(args.build_directory)
+    db.build(verbose=args.verbose)
+    
+
+parser = argparse.ArgumentParser(description='Create a build directory for BrainVISA.')
+subparsers = parser.add_subparsers()
+
+common_parser = argparse.ArgumentParser(add_help=False)
+common_parser.add_argument('-v', dest='verbose', action='store_true',
+                   help='Show detailed information during command execution.')
+common_parser.add_argument('-b', dest='build_directory',
+    help='build directory (default=current directory)')
+
+parser_create = subparsers.add_parser('create', parents=[common_parser])
+parser_create.add_argument('-r', dest='repository', default=None,
+    help='Location of the repository')
+parser_create.add_argument('-m', dest='modules', default=None, nargs='*',
+    help='Modules to include in the build tree (default=use repository default modules)')
+parser_create.set_defaults(func=create_command)
+
+parser_status = subparsers.add_parser('status', parents=[common_parser])
+parser_status.add_argument('-o', dest='status_file', default=None,
+    help='Write a full status of the build directory in yaml format (default=standard output)')
+parser_status.set_defaults(func=status_command)
+
+parser_check = subparsers.add_parser('check', parents=[common_parser])
+parser_check.add_argument('-f', dest='force', action='store_true',
+                   help='Do not use cache to avoid doing some operations')
+parser_check.set_defaults(func=check_command)
+
+parser_update = subparsers.add_parser('update', parents=[parser_check], add_help=False)
+parser_update.set_defaults(func=update_command)
+
+parser_configure = subparsers.add_parser('configure', parents=[parser_check], add_help=False)
+parser_configure.set_defaults(func=configure_command)
+
+parser_build = subparsers.add_parser('build', parents=[parser_check], add_help=False)
+parser_build.set_defaults(func=build_command)
+
+args = parser.parse_args()
+if args.verbose:
+    args.verbose=sys.stdout
+try:
+    args.func(args)
+except RuntimeError, e:
+    print >> sys.stderr, str(e)
+    sys.exit(1)
+    
