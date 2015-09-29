@@ -9,3 +9,4 @@ __version__ = "{0}.{1}.{2}".format(version_major, version_minor, version_micro)
 NAME = "brainvisa-maker"
 ORGANISATION = "BrainVISA"
 VERSION = __version__
+LICENSE = 'CeCILL-B'
