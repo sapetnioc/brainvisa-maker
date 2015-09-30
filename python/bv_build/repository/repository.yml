@@ -19,10 +19,10 @@ brainvisa-cmake:
           name: cmake
         - type: pip
           name: Sphinx
-          version: 1.3.1
+          #version: 1.3.1
     source:
         type: svn
-        url: https://bioproj.extra.cea.fr/neurosvn/brainvisa/development/brainvisa-cmake/trunk
+        url: https://bioproj.extra.cea.fr/neurosvn/brainvisa/development/brainvisa-cmake/branches/bug_fix
     build:
         type: brainvisa_cmake
 
@@ -35,6 +35,7 @@ soma-base:
         url: https://bioproj.extra.cea.fr/neurosvn/brainvisa/soma/soma-base/trunk/
     build:
         type: brainvisa_cmake
+        model: pure_python
 
 soma-workflow:      
     requires:
@@ -63,149 +64,46 @@ capsul:
         type: brainvisa_cmake
         model: pure_python
 
-cubicweb:
+postgresql:
     requires:
-        - type: module
-          name: base
-          
         - type: apt
-          name: libxml2-dev
-        - type: apt
-          name: libxslt1-dev
+          name: postgresql
         - type: apt
           name: libpq-dev
-        - type: apt
-          name: libgecode-dev
-        - type: apt
-          name: postgresql-plpython
+
+        - type: pip
+          name: psycopg2
+
+pyramid:
+    requires:
+        - type: pip
+          name: pyramid
+        - type: pip
+          name: pyramid-jinja2
+        - type: pip
+          name: cornice
+        - type: pip
+          name: pyramid-debugtoolbar
+
+gild_account_manager:
+    requires:
         - type: apt
           name: libldap2-dev
         - type: apt
           name: libsasl2-dev
         - type: apt
-          name: libssl-dev
+          name: python-imaging
         - type: apt
-          name: libzmq-dev
+          name: libfreetype6-dev
         - type: apt
-          name: mercurial
-          
-        - type: pip
-          name: yams
-          version: 0.39.1
-        - type: pip
-          name: pyzmq
-          version: 14.3.1
-        - type: pip
-          name: vobject
-          version: 0.6.6
-        - type: pip
-          name: Yapps2
-          version: 2.2.0
-        - type: pip
-          name: simplejson
-          version: 3.6.3
-        - type: pip
-          name: docutils
-          version: '0.12'
-        - type: pip
-          name: lxml
-          version: 3.3.5
-        - type: pip
-          name: indexer
-          version: 0.6.2
-        - type: pip
-          name: psycopg2
-          version: 2.5.3
-        - type: pip
-          name: numpy
-          version: 1.8.2
-        - type: pip
-          name: cubicweb
-          version: 3.19.3
-        - type: pip
-          name: cwclientlib
-          version: 0.1.0
-        - type: pip
-          name: passlib
-          version: 1.6.2
-        - type: pip
-          name: Twisted
-          version: 14.0.2
-        - type: pip
-          name: zope.interface
-          version: 4.1.2
+          name: libjpeg-dev
 
-brainomics:
+apache_wsgi:
     requires:
-        - type: module
-          name: cubicweb
-          
-        - type: cubicweb
-          name: card
-          version: 0.5.3
-        - type: cubicweb
-          name: bootstrap
-          version: 0.6.4
-        - type: cubicweb
-          name: comment
-          version: 1.10.0
-        - type: cubicweb
-          name: file
-          version: 1.16.0
-        - type: cubicweb
-          name: forgotpwd
-          version: 0.5.0
-        - type: cubicweb
-          name: genomics
-          version: 0.10.0
-        - type: cubicweb
-          name: jqplot
-          version: 0.4.1
-        - type: cubicweb
-          name: medicalexp
-          version: 0.12.2
-        - type: cubicweb
-          name: neuroimaging
-          version: 0.7.0
-        - type: cubicweb
-          name: preview
-          version: 1.1.0
-        - type: cubicweb
-          name: questionnaire
-          version: 0.7.0
-        - type: cubicweb
-          name: squareui
-          version: 0.3.6
-        - type: cubicweb
-          name: seo
-          version: 0.2.1
-        - type: cubicweb
-          name: trustedauth
-          version: 0.3.0
-        - type: cubicweb
-          name: dataio
-          version: 0.6.0
-        - type: cubicweb
-          name: container
-          version: 2.6.0
-        - type: cubicweb
-          name: rqlcontroller
-          version: 0.1.0
-        - type: cubicweb
-          name: brainomics
-          version: 0.11.3
-        - type: cubicweb
-          name: clinipath
-          version: 0.2.1
-        - type: cubicweb
-          name: fastimport
-          version: 0.1.0
-        - type: cubicweb
-          name: worker
-          version: 3.0.2
-          
-        - type: patch
-          name: brainomics-0.11.3.patch
+        - type: apt
+          name: apache2
+        - type: apt
+          name: libapache2-mod-wsgi
 
 catidb:
     requires:
@@ -214,43 +112,85 @@ catidb:
         - type: module
           name: soma-base
         - type: module
-          name: brainomics
+          name: postgresql
         - type: apt
           name: subversion
         - type: apt
           name: git
+        - type: apt
+          name: cmake
+        - type: apt
+          name: ipython
+        - type: apt
+          name: python-tk
+        - type: apt
+          name: g++
+        - type: apt
+          name: python-dev
+        - type: apt
+          name: python-virtualenv
+        - type: apt
+          name: sqlite3
+        - type: apt
+          name: libssl-dev
+        - type: apt
+          name: libncurses5-dev
+        - type: apt
+          name: libreadline-dev
+        - type: apt
+          name: pandoc
     
         - type: pip
           name: traits
-          version: 4.5.0
+          #version: 4.5.0
         - type: pip
           name: ipython
-          version: 2.2.0
+          #version: 2.2.0
         - type: pip
           name: pycrypto
-          version: 2.6.1
+          #version: 2.6.1
         - type: pip
           name: paramiko
-          version: 1.15.2
+          #version: 1.15.2
         - type: pip
           name: xlutils
-          version: 1.7.1
+          #version: 1.7.1
         - type: pip
           name: xlrd
-          version: 0.9.3
+          #version: 0.9.3
         - type: pip
           name: xlwt
-          version: 0.7.5
+          #version: 0.7.5
+        - type: pip
+          name: pypandoc
+        - type: pip
+          name: requests
           
-        - type: cubicweb
-          name: tag
-          version: 1.8.1
     source:
         type: svn
-        url: https://bioproj.extra.cea.fr/neurosvn/cati/catidb/trunk/
+        url: https://bioproj.extra.cea.fr/neurosvn/cati/catidb/postgres
 
     build:
         type: brainvisa_cmake
 
         
 
+catiweb:
+    requires:
+        - type: module
+          name: catidb
+        - type: module
+          name: pyramid
+    source:
+        type: svn
+        url: https://bioproj.extra.cea.fr/neurosvn/cati/catiweb/trunk   
+
+    build:
+        type: brainvisa_cmake
+
+catidb3:
+    requires:
+        - type: module
+          name: catidb
+        - type: module
+          name: catiweb
