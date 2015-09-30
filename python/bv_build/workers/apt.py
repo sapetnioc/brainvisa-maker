@@ -1,4 +1,5 @@
 import subprocess
+import re
 
 from bv_build.workers import RequirementWorker
 
@@ -11,7 +12,7 @@ class AptWorker(RequirementWorker):
                 print >> verbose, 'Checking apt-get package', name
             installed = True
             output = subprocess.check_output(['apt-cache', '-n', 'search', 
-                                             '^%s$' % name])
+                                             '^%s$' % re.escape(name)])
             if not output:
                 installed = False
             else:
@@ -32,6 +33,10 @@ class AptWorker(RequirementWorker):
                                   'marked as installed in cache'
         return True
     
+    @staticmethod
+    def resolve_requirement(dir_manager, verbose, **kwargs):
+        pass
+
     @staticmethod
     def missing_requirements_error_message(dir_manager, missing_requirements):
         missing = [r['name'] for r in missing_requirements]

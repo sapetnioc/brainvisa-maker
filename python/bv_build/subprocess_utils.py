@@ -1,13 +1,13 @@
 import sys
 import subprocess
 
-def silent_check_call(command, cwd=None, exit=False):
+def silent_check_call(command, cwd=None, env=None, exit=False):
     '''
     Call a command without printing any output but raises a
     subprocess.CalledProcessError containing the full command output (both
     stdout and stderr) if the return code of the command is not zero.
     '''
-    p = subprocess.Popen(command,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,cwd=cwd)
+    p = subprocess.Popen(command,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,cwd=cwd, env=env)
     stdout = p.communicate()[0]
     if p.returncode:
         if exit:

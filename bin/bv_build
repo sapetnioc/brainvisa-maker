@@ -99,6 +99,9 @@ if args.verbose:
 try:
     args.func(args)
 except RuntimeError, e:
-    print >> sys.stderr, str(e)
+    msg = str(e)
+    if not msg:
+        raise
+    print >> sys.stderr, 'ERROR: ', msg
     sys.exit(1)
     

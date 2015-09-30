@@ -46,9 +46,6 @@ def cmake_command():
         return ['cmake']
 
 class BrainVISACMakeWorker(BuildWorker):
-
-            
-            
     @staticmethod
     def get_model(model_name):
         m = __import__('bv_build.workers.brainvisa_cmake_models.%s' % model_name, fromlist=[''], level=0)

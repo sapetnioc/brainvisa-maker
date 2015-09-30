@@ -1,15 +1,23 @@
+import os
 import os.path as osp
 import subprocess
 
 from bv_build.workers import RequirementWorker
 from bv_build.subprocess_utils import silent_check_call
 
-class PipWorker(RequirementWorker):    
+class PipWorker(RequirementWorker):
+    @staticmethod
+    def set_pip_command(dir_manager):
+        if 'BRAINVISA_UNENV_PATH' in os.environ:
+            dir_manager.pip_command = ['bv_unenv', osp.join(dir_manager.directory, 'bin', 'pip')]
+        else:
+            dir_manager.pip_command = [osp.join(dir_manager.directory, 'bin', 'pip')]
+        
     @staticmethod
     def init_check_requirements(dir_manager, verbose):
-        dir_manager.pip_command = osp.join(dir_manager.directory, 'bin', 'pip')
+        PipWorker.set_pip_command(dir_manager)
         pip_installed = {}
-        for i in subprocess.check_output([dir_manager.pip_command,'freeze']).split('\n'):
+        for i in subprocess.check_output(dir_manager.pip_command + ['freeze']).split('\n'):
             if i:
                 module, version = i.split('==')
                 pip_installed[module] = version
@@ -29,7 +37,7 @@ class PipWorker(RequirementWorker):
                 print >> verbose, 'pip: %s installed version is %s but %s is expected' % (name, repr(installed_version), repr(version))
             return False
         if verbose:
-            print >> verbose, 'pip: %s version %s is installed' % (name, version)
+            print >> verbose, 'pip: %s version %s is installed' % (name, version or installed_version)
         return True
 
     @staticmethod
@@ -40,14 +48,14 @@ class PipWorker(RequirementWorker):
             module = name
         print 'pip install', module
         try:
-            silent_check_call([dir_manager.pip_command, 'install', module])
+            silent_check_call(dir_manager.pip_command + ['install', module])
         except subprocess.CalledProcessError, e:
             return 'Command failed: %s\nCommand output:\n%s' % (' '.join('"%s"' % i for i in e.cmd), e.output)
             
     @staticmethod
     def missing_requirements_error_message(dir_manager, missing_requirements):
-        missing = [('%s==%s' % (r['name'], r['version']) if r['version'] else r['name']) for r in missing_requirements]
+        missing = [('%s==%s' % (r['name'], r['version']) if r.get('version') else r['name']) for r in missing_requirements]
         return ('Some required Python modules do not have a required version. '
                 'Try using the following command: '
                 '%s install %s' % \
-                (dir_manager.pip_command, ' '.join(missing)))
+                (' '.join(dir_manager.pip_command), ' '.join(missing)))
