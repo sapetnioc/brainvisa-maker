@@ -12,26 +12,26 @@ find_package( python REQUIRED )
 find_package( Sphinx )
 find_package( brainvisa-cmake REQUIRED )
 
-SET( BRAINVISA_REAL_SOURCE_DIR "%(source_directory)s")
+file( TO_CMAKE_PATH "%(source_directory)s" BRAINVISA_REAL_SOURCE_DIR )
 BRAINVISA_PROJECT()
 
 BRAINVISA_DEPENDENCY( RUN DEPENDS python RUN ">= 2.5;<< 3.0" )
-if( EXISTS "%(source_directory)s/python" )
-    BRAINVISA_COPY_PYTHON_DIRECTORY( "%(source_directory)s/python"
+if( EXISTS "${BRAINVISA_REAL_SOURCE_DIR}/python" )
+    BRAINVISA_COPY_PYTHON_DIRECTORY( "${BRAINVISA_REAL_SOURCE_DIR}/python"
                                      ${PROJECT_NAME} python
                                      INSTALL_ONLY )
 else()
-    BRAINVISA_COPY_PYTHON_DIRECTORY( "%(source_directory)s/%(component_name)s"
+    BRAINVISA_COPY_PYTHON_DIRECTORY( "${BRAINVISA_REAL_SOURCE_DIR}/%(component_name)s"
                                      ${PROJECT_NAME} python/%(component_name)s
                                      INSTALL_ONLY )
 endif()
-if( EXISTS "%(source_directory)s/bin" )
-    BRAINVISA_COPY_DIRECTORY( "%(source_directory)s/bin"
+if( EXISTS "${BRAINVISA_REAL_SOURCE_DIR}/bin" )
+    BRAINVISA_COPY_DIRECTORY( "${BRAINVISA_REAL_SOURCE_DIR}/bin"
                               bin
                               ${PROJECT_NAME} )
 endif()
 
-BRAINVISA_GENERATE_SPHINX_DOC( "%(source_directory)s/doc/source"
+BRAINVISA_GENERATE_SPHINX_DOC( "${BRAINVISA_REAL_SOURCE_DIR}/doc/source"
     "share/doc/%(component_name)s-${BRAINVISA_PACKAGE_VERSION_MAJOR}.${BRAINVISA_PACKAGE_VERSION_MINOR}" )
 
 set( BV_ENV_PYTHON_CMD 
@@ -39,7 +39,7 @@ set( BV_ENV_PYTHON_CMD
 
 # tests
 enable_testing()
-add_test( %(component_name)s-tests "${CMAKE_BINARY_DIR}/bin/bv_env" "${PYTHON_EXECUTABLE}" "%(source_directory)s/test/test_%(component_name)s.py" )
+add_test( %(component_name)s-tests "${CMAKE_BINARY_DIR}/bin/bv_env" "${PYTHON_EXECUTABLE}" "${BRAINVISA_REAL_SOURCE_DIR}/test/test_%(component_name)s.py" )
 UNSET( BRAINVISA_REAL_SOURCE_DIR)
 '''
 
