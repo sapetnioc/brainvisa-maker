@@ -1,2 +1,2 @@
 # brainvisa-maker
-New buid system of BrainVISA
+Experimental buid system for BrainVISA
