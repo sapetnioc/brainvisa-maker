@@ -4,13 +4,13 @@ from collections import OrderedDict
 import subprocess
 from cStringIO import StringIO
 
-from .repository import Repository
+from .repository import Distribution
 from .yaml_utils import yaml_load, yaml_dump
 from .subprocess_utils import silent_or_exit_call
 from .workers import get_worker      
 
 class DirectoryManager(object):
-    default_repository_name = 'repository'
+    default_distribution_name = 'repository/default_distribution.yaml'
     cache_file = 'bv_build_cache.yml'
         
     @classmethod
@@ -18,29 +18,31 @@ class DirectoryManager(object):
         return osp.join(directory, cls.cache_file)
     
     @classmethod
-    def create(cls, directory, repository=None, modules=None):
+    def create(cls, directory, distribution=None, modules=None):
         directory = osp.normpath(osp.abspath(directory))
         cache_file = cls.cache_file_name(directory)
         if osp.exists(cache_file):
             raise RuntimeError('Cannot create directory, cache file already exists: %s' % cache_file)
         
-        if repository is None:
+        if distribution is None:
             for path in (directory, osp.dirname(__file__)):
-                repo_file = osp.join(path, cls.default_repository_name)
-                if osp.exists(repo_file):
+                distro_file = osp.join(path, cls.default_distribution_name)
+                if osp.exists(distro_file):
                     break
             else:
-                raise RuntimeError('Cannot find repository file')
-            repository = Repository(repo_file)
-        elif isinstance(repository,Repository):
-            repository = repository
+                raise RuntimeError('Cannot find default distribution file')
+            distribution = Distribution(distro_file)
+        elif isinstance(distribution, Distribution):
+            distribution = distribution
         else:
-            repository = Repository(repository)
+            distribution = Distribution(distribution)
         
-        cache = OrderedDict(repository=repository.source, modules=modules)
+        cache = OrderedDict(distribution=distribution.source,
+                            repository=distribution.repository.source, 
+                            modules=modules)
         
         if modules is None:
-            modules = repository.default_modules()
+            modules = distribution.default_modules()
         if not modules:
             raise RuntimeError('Missing list of modules to use')
         
@@ -52,26 +54,29 @@ class DirectoryManager(object):
         self.directory = osp.normpath(osp.abspath(directory))
         self.cache_file = self.cache_file_name(directory)
         self.cache = yaml_load(open(self.cache_file))
-        self.repository = Repository(self.cache['repository'])
+        self.repository = Repository(self.cache['repository']
+        self.distribution = Distribution(self.cache['distribution']
+                                         repository=self.repository)
         self.modules = self.cache['modules']
         if self.modules is None:
-            self.modules = self.repository.default_modules()
+            self.modules = self.distribution.default_modules()
 
     def save_cache(self):
         yaml_dump(self.cache, open(self.cache_file,'w'))
     
     def clear_cache(self):
-        self.cache = dict((i,self.cache[i]) for i in ('repository','modules'))
+        self.cache = dict((i,self.cache[i]) for i in ('repository', 'distribution', 'modules'))
         self.save_cache()
             
     def status(self, out=sys.stdout):
         print >> out, 'Global information:'
         print >> out, '    Directory:', self.directory
         print >> out, '    Repository:', self.repository.source
+        print >> out, '    Distribution:', self.distribution.source
         print >> out, '    Modules:', self.modules
         print >> out, '    Default modules:', not bool(self.cache['modules'])
         
-        for module in self.repository.modules_dependencies(self.modules):
+        for module in self.distribution.modules_dependencies(self.modules):
             module_cache = self.cache.get(module,{})
             print >> out
             print >> out, module + ':'
@@ -84,7 +89,7 @@ class DirectoryManager(object):
                     print >> out, '        - %s' % req_yaml
             elif missing_requirements is not None:
                     print >> out, '    Missing requirements: null'
-            source = self.repository.module_source(module)
+            source = self.distribution.module_source(module)
             if source is not None:
                 src_yaml = yaml_dump(source, default_flow_style=False).strip().replace('\n','\n        ')
                 print >> out, '    Source: '
@@ -111,14 +116,14 @@ class DirectoryManager(object):
                 print >> out, '    bv_maker build: |\n        %s' % bv_maker.replace('\n', '\n        ')
 
     def check_requirements(self, verbose=None):
-        all_modules = list(self.repository.modules_dependencies(self.modules))
+        all_modules = list(self.distribution.modules_dependencies(self.modules))
         for module in all_modules:
             module_cache = self.cache.get(module)
             if module_cache:
                 module_cache.pop('missing requirements', None)
         used_workers = set()
         for module in all_modules:
-            for requires in self.repository.module_requirements(module):
+            for requires in self.distribution.module_requirements(module):
                 r = requires.copy()
                 worker_name = r.pop('type')
                 worker = get_worker(worker_name, 'requirement')
@@ -132,7 +137,7 @@ class DirectoryManager(object):
     
     def resolve_requirements(self, verbose=None):
         errors = []
-        for module in self.repository.modules_dependencies(self.modules):
+        for module in self.distribution.modules_dependencies(self.modules):
             module_cache = self.cache.get(module,{})
             missing_requirements = module_cache.get('missing requirements')
             if missing_requirements:
@@ -146,7 +151,7 @@ class DirectoryManager(object):
                     
         self.check_requirements(verbose=verbose)
         missing_by_worker_name = {}
-        for module in self.repository.modules_dependencies(self.modules):
+        for module in self.distribution.modules_dependencies(self.modules):
             module_cache = self.cache.get(module,{})
             missing_requirements = module_cache.get('missing requirements')
             if missing_requirements:
@@ -161,8 +166,8 @@ class DirectoryManager(object):
         return osp.join(self.directory, 'src', module)
     
     def sources_update(self, verbose=None):
-        for module in self.repository.modules_dependencies(self.modules):
-            source = self.repository.module_source(module)
+        for module in self.distribution.modules_dependencies(self.modules):
+            source = self.distribution.module_source(module)
             if source is not None:
                 worker_name = source['type']
                 worker = get_worker(worker_name, 'source')
@@ -174,8 +179,8 @@ class DirectoryManager(object):
         #self.cache.pop('configure', None)
         #self.save_cache()
         #bv_maker_cfg = None
-        #for module in self.repository.modules_dependencies(self.modules):
-            #build = self.repository.module_build(module)
+        #for module in self.distribution.modules_dependencies(self.modules):
+            #build = self.distribution.module_build(module)
             #if build:
                 #build_type = build['type']
                 #if build_type == 'bv_maker':
@@ -244,8 +249,8 @@ class DirectoryManager(object):
     
     def configure(self, verbose=None, release=True, debug=False):
         workers = {}
-        for module in self.repository.modules_dependencies(self.modules):
-            build = self.repository.module_build(module)
+        for module in self.distribution.modules_dependencies(self.modules):
+            build = self.distribution.module_build(module)
             if build:
                 build = build.copy()
                 build_type = build.pop('type')
@@ -260,8 +265,8 @@ class DirectoryManager(object):
 
     def build(self, verbose=None):
         workers = {}
-        for module in self.repository.modules_dependencies(self.modules):
-            build = self.repository.module_build(module)
+        for module in self.distribution.modules_dependencies(self.modules):
+            build = self.distribution.module_build(module)
             if build:
                 build_type = build['type']
                 worker = workers.get(build_type)
